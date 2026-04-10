@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>H^EC Decoder/Encoder</title>
+
+<style>
+  body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+  textarea { width: 100%; margin: 10px 0; padding: 10px; font-size: 1.1em; }
+  button { padding: 10px 20px; margin: 5px; }
+  #output { margin-top: 15px; font-size: 1.2em; word-break: break-all; background: white; padding: 10px; }
+</style>
+</head>
+
+<body>
+
+<h2>H^EC Decoder/Encoder</h2>
+
+<textarea id="inputText" placeholder="Enter text here..."></textarea>
+
+<button onclick="koduoti()">Encode</button>
+<button onclick="dekoduoti()">Decode</button>
+
+<div id="output"></div>
+
+<script>
+
+const base64Abecelė = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+const intervalai = [
+  [0x0041, 0x007A],
+  [0x00C0, 0x00FF],
+  [0x0100, 0x017F],
+  [0x0370, 0x03FF],
+  [0x0400, 0x04FF],
+  [0x0590, 0x05FF],
+  [0x0600, 0x06FF],
+  [0x0900, 0x097F],
+  [0x0980, 0x09FF],
+  [0x0B80, 0x0BFF],
+  [0x0C00, 0x0C7F],
+  [0x0C80, 0x0CFF],
+  [0x0D00, 0x0D7F],
+  [0x3040, 0x309F],
+  [0x30A0, 0x30FF],
+  [0x4E00, 0x9FFF],
+  [0xAC00, 0xD7AF],
+  [0x2000, 0x206F]
+];
+
+function generuotiSimbolį(indeksas) {
+  const intervalas = intervalai[indeksas % intervalai.length];
+  const kodas = intervalas[0] + ((indeksas * 31) % (intervalas[1] - intervalas[0]));
+  return String.fromCharCode(kodas);
+}
+
+let kodavimoŽemėlapis = {};
+let dekodavimoŽemėlapis = {};
+
+for (let i = 0; i < base64Abecelė.length; i++) {
+  const simbolis = generuotiSimbolį(i);
+  kodavimoŽemėlapis[base64Abecelė[i]] = simbolis;
+  dekodavimoŽemėlapis[simbolis] = base64Abecelė[i];
+}
+
+function koduoti() {
+  const tekstas = document.getElementById("inputText").value;
+
+  const base64 = btoa(unescape(encodeURIComponent(tekstas)));
+
+  let rezultatas = "";
+  for (let c of base64) {
+    rezultatas += kodavimoŽemėlapis[c];
+  }
+
+  document.getElementById("output").innerText = rezultatas;
+}
+
+function dekoduoti() {
+  const tekstas = document.getElementById("inputText").value;
+
+  let base64 = "";
+  for (let c of tekstas) {
+    if (dekodavimoŽemėlapis[c]) {
+      base64 += dekodavimoŽemėlapis[c];
+    }
+  }
+
+  try {
+    const originalas = decodeURIComponent(escape(atob(base64)));
+    document.getElementById("output").innerText = originalas;
+  } catch (e) {
+    document.getElementById("output").innerText = "Decoding error";
+  }
+}
+
+</script>
+
+</body>
+</html>
